@@ -2,31 +2,25 @@
 import type { AppProps } from "next/app";
 import { ClerkProvider } from "@clerk/nextjs";
 import Head from "next/head";
-import Script from "next/script";
+import Plausible from "@plausible-analytics/tracker";
 import "../styles/globals.css";
+
+// Initialize Plausible Analytics only on the client side
+if (typeof window !== "undefined") {
+    Plausible({
+        domain: "applyjet.vercel.app", // 🔹 your live domain
+        apiHost: "https://plausible.io",
+    });
+}
 
 function MyApp({ Component, pageProps }: AppProps) {
     return (
         <ClerkProvider {...pageProps}>
             <Head>
-                <title>ApplyJet ✈️</title>
+                <title>ApplyJet</title>
                 <meta name="description" content="Your career. On autopilot." />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
             </Head>
-
-            {/* ✅ Correct Plausible Integration */}
-            <Script
-                strategy="afterInteractive"
-                src="https://plausible.io/js/pa-exjLu42AswNM_XKS_SfXa.js"
-            />
-
-            <Script id="plausible-init" strategy="afterInteractive">
-                {`
-          window.plausible = window.plausible || function() {
-            (window.plausible.q = window.plausible.q || []).push(arguments);
-          };
-        `}
-            </Script>
-
             <Component {...pageProps} />
         </ClerkProvider>
     );
