@@ -1,75 +1,70 @@
-import { useEffect } from "react";
+// src/pages/dashboard.tsx
+import { useEffect, useState } from "react";
 import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabaseClient";
-import { usePlausibleEvent } from "@/lib/usePlausibleEvent";
+
+interface Profile {
+    id: number;
+    clerk_id: string;
+    name: string;
+    email: string;
+    created_at: string;
+}
 
 export default function Dashboard() {
-  const { user } = useUser();
-  const { track } = usePlausibleEvent();
+    const { user } = useUser();
+    const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const syncUser = async () => {
-      if (!user) return;
+    useEffect(() => {
+        const fetchProfiles = async () => {
+            if (!user) return;
+            try {
+                const { data, error } = await supabase.from("profiles").select("*");
+                if (error) throw error;
+                setProfiles(data || []);
+            } catch (err) {
+                console.error("Error fetching profiles:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-      const { emailAddresses, id, fullName } = user;
-      const email = emailAddresses?.[0]?.emailAddress;
+        fetchProfiles();
+    }, [user]);
 
-      try {
-        // Check if the user already exists in Supabase
-        const { data: existingUser, error: selectError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("clerk_id", id)
-          .single();
+    const myProfile = profiles.find((p) => p.clerk_id === user?.id);
 
-        if (selectError && selectError.code !== "PGRST116") {
-          console.error("Error checking existing user:", selectError.message);
-          return;
-        }
+    return (
+        <>
+            <SignedIn>
+                <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-center px-6">
+                    <h1 className="text-4xl font-bold mb-4 text-gray-800">
+                        🚀 Welcome back, {user?.fullName || "Jet Pilot"}!
+                    </h1>
 
-        if (!existingUser) {
-          const { error: insertError } = await supabase.from("profiles").insert([
-            {
-              clerk_id: id,
-              email,
-              name: fullName || "",
-            },
-          ]);
+                    {loading ? (
+                        <p className="text-gray-500">Loading your dashboard...</p>
+                    ) : (
+                        <>
+                            <p className="text-lg text-gray-700 mb-2">
+                                Total ApplyJet users: <strong>{profiles.length}</strong>
+                            </p>
+                            {myProfile && (
+                                <p className="text-md text-gray-600">
+                                    Joined on: {new Date(myProfile.created_at).toLocaleDateString()}
+                                    <br />
+                                    Email: {myProfile.email}
+                                </p>
+                            )}
+                        </>
+                    )}
+                </div>
+            </SignedIn>
 
-          if (insertError) {
-            console.error("Error inserting user:", insertError.message);
-          } else {
-            console.log("✅ User synced to Supabase successfully!");
-            track("Dashboard Viewed", { email, synced: true });
-          }
-        } else {
-          console.log("ℹ️ User already exists in Supabase.");
-          track("Dashboard Viewed", { email, synced: false });
-        }
-      } catch (err) {
-        console.error("Unexpected error syncing user:", err);
-      }
-    };
-
-    syncUser();
-  }, [user, track]);
-
-  return (
-    <>
-      <SignedIn>
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-          <h1 className="text-4xl font-bold mb-4 text-gray-800">
-            🚀 Welcome, {user?.fullName || "Jet Pilot"}!
-          </h1>
-          <p className="text-lg text-gray-600">
-            Your ApplyJet profile is now synced with Supabase.
-          </p>
-        </div>
-      </SignedIn>
-
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
+            <SignedOut>
+                <RedirectToSignIn />
+            </SignedOut>
+        </>
+    );
 }
