@@ -1,104 +1,69 @@
 ﻿import { useState } from "react";
 
 export default function Waitlist() {
-    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [role, setRole] = useState("Jobseeker");
+    const [joined, setJoined] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [ok, setOk] = useState<null | boolean>(null);
-    const [msg, setMsg] = useState<string>("");
 
-    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!email) return;
+
         setLoading(true);
-        setOk(null);
-        setMsg("");
 
         try {
-            const r = await fetch("/api/subscribe", {
+            // Call your subscribe API
+            const res = await fetch("/api/subscribe", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, role }),
+                body: JSON.stringify({ email }),
             });
-            const data = await r.json();
 
-            if (data?.success) {
-                setOk(true);
-                setMsg("You’re on the list! We’ll notify you as soon as ApplyJet takes off.");
-                setName("");
-                setEmail("");
-                setRole("Jobseeker");
-                // Plausible custom event (works because we load plausible in _app)
-                try { (window as any)?.plausible?.("Waitlist Signup"); } catch { }
-            } else {
-                setOk(false);
-                setMsg(data?.error || "Something went wrong. Please try again.");
+            if (!res.ok) throw new Error("Failed to join waitlist");
+
+            // Track Plausible event (works both local + production)
+            if (typeof window !== "undefined" && window.plausible) {
+                console.log("📊 Plausible event (dev mode): Waitlist Joined", { email });
+                window.plausible("Waitlist Joined", { props: { email } });
             }
-        } catch (err: any) {
-            setOk(false);
-            setMsg(err?.message || "Network error. Please try again.");
+
+            setJoined(true);
+        } catch (err) {
+            console.error("Waitlist join failed:", err);
         } finally {
             setLoading(false);
         }
+    };
+
+    if (joined) {
+        return (
+            <section className="py-20 bg-gray-50 text-center">
+                <h2 className="text-2xl font-bold mb-2">🎉 You’re on the list!</h2>
+                <p className="text-gray-600">We’ll notify you as soon as ApplyJet takes off.</p>
+            </section>
+        );
     }
 
     return (
-        <section id="waitlist" className="py-20 bg-[#F9FAFB]">
-            <div className="mx-auto max-w-3xl px-6 text-center">
-                <h2 className="reveal text-2xl md:text-3xl font-semibold text-textPrimary">
-                    Be first to launch with ApplyJet
-                </h2>
-                <p className="reveal mt-3 text-textMuted">
-                    Get early access, lifetime discounts, and a front-row seat to the next generation of AI-powered hiring.
-                </p>
-
-                <form className="reveal mt-8 flex flex-col gap-3 items-stretch"
-                    style={{ transitionDelay: "150ms" }}
-                    onSubmit={onSubmit}>
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Name"
-                        className="rounded-xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-jetBlue/30"
-                        value={name} onChange={(e) => setName(e.target.value)}
-                    />
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        className="rounded-xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-jetBlue/30"
-                        required
-                        value={email} onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <select
-                        name="role"
-                        className="rounded-xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-jetBlue/30"
-                        value={role} onChange={(e) => setRole(e.target.value)}
-                    >
-                        <option>Jobseeker</option>
-                        <option>Recruiter</option>
-                    </select>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`btn-glow mt-2 rounded-xl px-6 py-3 text-white ${loading ? "bg-jetHover" : "bg-jetBlue hover:bg-jetHover"}`}
-                    >
-                        {loading ? "Adding…" : "Join the Early Access List"}
-                    </button>
-
-                    {ok === true && (
-                        <p className="mt-2 text-success font-medium">
-                            ✅ {msg}
-                        </p>
-                    )}
-                    {ok === false && (
-                        <p className="mt-2 text-red-600">
-                            ❗ {msg}
-                        </p>
-                    )}
-                </form>
-            </div>
+        <section id="waitlist" className="py-20 bg-gray-100 text-center">
+            <h2 className="text-3xl font-bold mb-4">Join the Waitlist</h2>
+            <form onSubmit={handleSubmit} className="max-w-md mx-auto flex flex-col gap-3">
+                <input
+                    type="email"
+                    required
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="px-4 py-2 border rounded-md w-full"
+                />
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                    {loading ? "Joining..." : "Join Waitlist"}
+                </button>
+            </form>
         </section>
     );
 }

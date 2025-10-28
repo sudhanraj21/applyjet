@@ -1,29 +1,35 @@
-﻿import type { AppProps } from "next/app";
+﻿// src/pages/_app.tsx
+import type { AppProps } from "next/app";
+import { ClerkProvider } from "@clerk/nextjs";
 import Head from "next/head";
 import Script from "next/script";
-import "@/styles/globals.css";
+import "../styles/globals.css";
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps) {
     return (
-        <>
+        <ClerkProvider {...pageProps}>
             <Head>
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <title>ApplyJet — Your Career. On Autopilot.</title>
-                <meta
-                    name="description"
-                    content="ApplyJet finds, matches, and applies to jobs for you — while you focus on what matters."
-                />
-                <link rel="icon" href="/favicon.svg" />
+                <title>ApplyJet ✈️</title>
+                <meta name="description" content="Your career. On autopilot." />
             </Head>
 
-            {/* Plausible Analytics */}
+            {/* ✅ Correct Plausible Integration */}
             <Script
                 strategy="afterInteractive"
-                data-domain="applyjet.co"
-                src="https://plausible.io/js/script.js"
+                src="https://plausible.io/js/pa-exjLu42AswNM_XKS_SfXa.js"
             />
 
+            <Script id="plausible-init" strategy="afterInteractive">
+                {`
+          window.plausible = window.plausible || function() {
+            (window.plausible.q = window.plausible.q || []).push(arguments);
+          };
+        `}
+            </Script>
+
             <Component {...pageProps} />
-        </>
+        </ClerkProvider>
     );
 }
+
+export default MyApp;
