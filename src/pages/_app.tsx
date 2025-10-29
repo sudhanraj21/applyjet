@@ -4,17 +4,18 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Head from "next/head";
 import "../styles/globals.css";
 
+const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+
 function MyApp({ Component, pageProps }: AppProps) {
-    return (
-        <ClerkProvider {...pageProps}>
-            <Head>
-                <title>ApplyJet</title>
-                <meta name="description" content="Your career. On autopilot." />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-            </Head>
-            <Component {...pageProps} />
-        </ClerkProvider>
-    );
+  return (
+    <ClerkProvider publishableKey={publishableKey} {...pageProps}>
+      <Head>
+        <title>ApplyJet</title>
+        <meta name="description" content="Your career. On autopilot." />
+      </Head>
+      <Component {...pageProps} />
+    </ClerkProvider>
+  );
 }
 
 export default MyApp;
