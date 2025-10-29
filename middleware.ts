@@ -3,16 +3,17 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/waitlist",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/api/subscribe",
+  "/api/waitlist(.*)",
 ]);
 
 export default clerkMiddleware((auth, req) => {
   if (isPublicRoute(req)) return;
-  auth.protect(); // ✅ fixed line
+  auth().protect(); // Protect all other routes
 });
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!_next|.*\\..*).*)"],
 };
