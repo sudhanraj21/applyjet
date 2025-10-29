@@ -1,7 +1,6 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define which routes are public
 const isPublicRoute = createRouteMatcher([
   "/",
   "/waitlist",
@@ -10,19 +9,18 @@ const isPublicRoute = createRouteMatcher([
   "/api/waitlist(.*)",
 ]);
 
-export default clerkMiddleware((auth, req) => {
-  // Skip protection for public routes
+export default clerkMiddleware(async (auth, req) => {
+  // Skip auth for public routes
   if (isPublicRoute(req)) return;
 
-  // ✅ Properly enforce authentication for protected routes
-  const { userId } = auth();
+  // Enforce authentication for protected routes
+  const session = await auth();
 
-  if (!userId) {
-    return auth().redirectToSignIn({ returnBackUrl: req.url });
+  if (!session.userId) {
+    return session.redirectToSignIn({ returnBackUrl: req.url });
   }
 });
 
 export const config = {
   matcher: ["/((?!_next|.*\\..*).*)"],
 };
-s
