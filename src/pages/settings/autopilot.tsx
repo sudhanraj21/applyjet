@@ -7,6 +7,8 @@ import {
     getAIApplicationLogs,
 } from "@/lib/supabaseAutopilot";
 import { Card, CardContent } from "@/components/ui/card";
+import { useUser } from "@clerk/nextjs";
+import { AutopilotSettingsForm } from "@/components/forms/AutopilotSettingsForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";

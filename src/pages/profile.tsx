@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { useUser } from "@clerk/nextjs";
+import { Card, CardContent } from "@/components/ui/card";
+import { ProfileForm } from "@/components/forms/ProfileForm";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
